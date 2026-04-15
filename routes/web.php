@@ -13,6 +13,7 @@ Route::get('/', function () {
 });
 
 Route::get('/dicom-monitoring', [DicomMonitoringController::class, 'index']);
+Route::get('/dashboard', [DicomMonitoringController::class, 'dikom']);
 
 Route::get('/ris-out', [RisOutController::class, 'index']);
 Route::get('/rs-ris-out', [RSRisOutController::class, 'index']);
