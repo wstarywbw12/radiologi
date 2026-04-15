@@ -21,11 +21,7 @@ Route::get('/service-request', [ServiceRequestController::class, 'index']);
 Route::get('/rs-service-request', [RSServiceRequestController::class, 'index']);
 
 
-Route::get('/cek-image-study', [SatusehatImagingController::class, 'index']);
+Route::get('/cek-image-study', [SatusehatImagingController::class, 'index'])->name('satusehat.index');
 Route::post('/satusehat/search', [SatusehatImagingController::class, 'search'])->name('satusehat.search');
 
-Route::get('/dashboard', function () {
-    return response()->json([
-        'base_url_stg' => env('SATUSEHAT_BASE_URL_STG')
-    ]);
-});
+

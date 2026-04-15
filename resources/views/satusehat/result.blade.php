@@ -23,7 +23,7 @@
             <h6>Response:</h6>
             <pre>{{ json_encode($data, JSON_PRETTY_PRINT) }}</pre>
 
-            <a href="/cek-image-study" class="btn btn-primary mt-3">Kembali</a>
+            <a href="{{ route('satusehat.index') }}" class="btn btn-primary mt-3">Kembali</a>
 
         </div>
     </div>
