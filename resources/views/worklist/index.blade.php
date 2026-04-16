@@ -67,9 +67,11 @@
                                 <td>{{ $row['no_rm'] }}</td>
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
-                                        <span class="badge bg-primary" id="rontgen-{{ $index }}">
-                                            {{ $row['no_rontgen'] }}
-                                        </span>
+                                        @if ($row['processed_status'] == 1)
+                                        <span class="badge bg-primary"> {{ $row['no_rontgen'] }}</span>
+                                    @else
+                                        <span class="badge bg-danger"> {{ $row['no_rontgen'] }}</span>
+                                    @endif
                                         <button type="button" class="btn btn-sm btn-outline-secondary copy-btn" 
                                                 data-copy="{{ $row['no_rontgen'] }}"
                                                 data-index="{{ $index }}"
