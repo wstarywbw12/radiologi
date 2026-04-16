@@ -101,4 +101,68 @@ class SatusehatImagingController extends Controller
             'accnumber'
         ));
     }
+
+
+    public function api(Request $request)
+{
+    $request->validate([
+        'accnumber' => 'required',
+    ]);
+
+    $accnumber = $request->accnumber;
+
+    $baseUrl     = config('satusehat.base_url_prod');
+    $clientId    = config('satusehat.client_id');
+    $clientSecret= config('satusehat.client_secret');
+    $orgId       = config('satusehat.org_id');
+
+    // 🔐 TOKEN
+    $accessToken = Cache::remember('satusehat_token_prod', 3500, function () use ($baseUrl, $clientId, $clientSecret) {
+
+        $response = Http::asForm()->post(
+            $baseUrl . '/oauth2/v1/accesstoken?grant_type=client_credentials',
+            [
+                'client_id' => $clientId,
+                'client_secret' => $clientSecret,
+            ]
+        );
+
+        if (!$response->successful()) {
+            return null;
+        }
+
+        return $response->json()['access_token'] ?? null;
+    });
+
+    if (!$accessToken) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Gagal generate token'
+        ], 500);
+    }
+
+    // 🔎 HIT API
+    $identifier = "http://sys-ids.kemkes.go.id/acsn/$orgId|$accnumber";
+
+    $response = Http::withToken($accessToken)
+        ->get($baseUrl . '/fhir-r4/v1/ImagingStudy', [
+            'identifier' => $identifier,
+        ]);
+
+    if (!$response->successful()) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Gagal hit API',
+            'error' => $response->body()
+        ], 500);
+    }
+
+    $data = $response->json();
+
+  
+    return response()->json([
+        'status' => true,
+        'data' => $data
+    ]);
+}
 }
