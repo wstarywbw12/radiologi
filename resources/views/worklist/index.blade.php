@@ -15,7 +15,7 @@
                <div class="card">
                   <div class="card-header">
                         <h3>
-                            ServiceRequest Radiologi
+                            Image Study Satusehat - Worklist Radiologi
                         </h3>
                   </div>
                </div>
@@ -72,6 +72,7 @@
                             <th>End</th>
                             <th>Status Kirim</th>
                             <th>Image Study</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -114,10 +115,17 @@
                                         <span class="badge bg-danger">Belum</span>
                                     @endif
                                 </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-primary sync-btn" 
+                                            data-no-rontgen="{{ $row['no_rontgen'] }}"
+                                            title="Cek Image Study">
+                                        🔄 Cek
+                                    </button>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="11" class="text-center">Tidak ada</td>
+                                <td colspan="12" class="text-center">Tidak ada数据</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -134,7 +142,7 @@
             <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
                 <span class="visually-hidden">Loading...</span>
             </div>
-            <p class="mt-3">Mengirim data ke SatuSehat...</p>
+            <p class="mt-3">Cek Image Study...</p>
         </div>
     </div>
 
@@ -148,7 +156,7 @@
             document.getElementById('loadingOverlay').style.display = 'none';
         }
 
-        // Fungsi untuk menampilkan notifikasi
+        // Fungsi untuk menampilkan notifikasi toast
         function showNotification(message, type = 'success') {
             const notification = document.createElement('div');
             notification.className = `alert alert-${type} position-fixed top-0 end-0 m-3`;
@@ -165,13 +173,12 @@
             }, 3000);
         }
 
-        // Fungsi untuk mengakses API
+        // Fungsi untuk mengakses API manualsend
         async function callApi(noRontgen, button) {
             const apiUrl = `http://192.168.10.29/wslokal/satusehat/radiologi/worklist/ris/accno/${noRontgen}/manualsend`;
             
             showLoading();
             
-            // Simpan teks asli tombol
             const originalText = button.innerHTML;
             button.innerHTML = '⏳';
             button.disabled = true;
@@ -192,19 +199,19 @@
                 }
                 
                 if (response.ok) {
-                    showNotification(`Berhasil mengirim No Rontgen: ${noRontgen}`, 'success');
+                    const successMessage = result.metaData?.message || `Berhasil mengirim No Rontgen: ${noRontgen}`;
+                    showNotification(successMessage, 'success');
                     button.innerHTML = '✓';
                     setTimeout(() => {
                         button.innerHTML = originalText;
                         button.disabled = false;
                     }, 2000);
                     
-                    // Refresh halaman setelah 2 detik
                     setTimeout(() => {
                         location.reload();
                     }, 2000);
                 } else {
-                    throw new Error(result.message || 'Gagal mengirim ke API');
+                    throw new Error(result.metaData?.message || result.message || 'Gagal mengirim ke API');
                 }
             } catch (error) {
                 console.error('Error:', error);
@@ -219,20 +226,82 @@
             }
         }
 
+        // Fungsi untuk cek Image Study
+        async function syncImageStudy(noRontgen, button) {
+            const apiUrl = `http://192.168.10.29/wslokal/satusehat/radiologi/worklist/ris/accno/${noRontgen}/sinkimgstudy`;
+            
+            showLoading();
+            
+            const originalText = button.innerHTML;
+            button.innerHTML = '⏳';
+            button.disabled = true;
+            
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
+                
+                let result;
+                try {
+                    result = await response.json();
+                } catch(e) {
+                    result = { message: await response.text() };
+                }
+                
+                if (response.ok) {
+                    // Ambil message dari response metaData
+                    const message = result.metaData?.message || `Cek Image Study berhasil untuk No Rontgen: ${noRontgen}`;
+                    
+                    // Tampilkan alert dengan message dari response
+                    alert(message);
+                    
+                    // Tampilkan juga notifikasi toast
+                    showNotification(message, 'success');
+                    
+                    button.innerHTML = '✓';
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                    }, 2000);
+                    
+                    // Refresh halaman setelah 2 detik
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    const errorMessage = result.metaData?.message || result.message || 'Gagal cek Image Study';
+                    alert(errorMessage);
+                    showNotification(errorMessage, 'danger');
+                    throw new Error(errorMessage);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                const errorMsg = error.message || 'Terjadi kesalahan saat cek Image Study';
+                alert(errorMsg);
+                showNotification(errorMsg, 'danger');
+                button.innerHTML = '❌';
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }, 2000);
+            } finally {
+                hideLoading();
+            }
+        }
+
         // Fungsi copy + API untuk tombol copy
         function copyAndSendToApi(text, button) {
-            // Method 1: Clipboard API (modern)
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(text).then(() => {
                     showSuccess(button);
-                    // Panggil API setelah copy berhasil
                     callApi(text, button);
                 }).catch(() => {
                     fallbackCopy(text, button, true);
                 });
-            } 
-            // Method 2: Fallback untuk HTTP atau browser lama
-            else {
+            } else {
                 fallbackCopy(text, button, true);
             }
         }
@@ -300,6 +369,20 @@
                     copyAndSendToApi(textToCopy, this);
                 } else {
                     alert('Tidak ada teks untuk disalin');
+                }
+            });
+        });
+
+        // Event listener untuk tombol Cek (cek Image Study) - LANGSUNG PROSES TANPA KONFIRMASI
+        document.querySelectorAll('.sync-btn').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const noRontgen = this.getAttribute('data-no-rontgen');
+                if (noRontgen && noRontgen.trim() !== '') {
+                    // Langsung panggil fungsi tanpa konfirmasi
+                    syncImageStudy(noRontgen, this);
+                } else {
+                    alert('Nomor Rontgen tidak valid');
                 }
             });
         });
