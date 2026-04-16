@@ -71,7 +71,6 @@
                             <th>Start</th>
                             <th>End</th>
                             <th>Status Kirim</th>
-                            <th>Service Request</th>
                             <th>Image Study</th>
                         </tr>
                     </thead>
@@ -103,13 +102,6 @@
                                 <td>{{ $row['radiolog_datetime_end'] }}</td>
                                 <td>
                                     @if ($row['processed_status'] == 1)
-                                        <span class="badge bg-success">Sudah</span>
-                                    @else
-                                        <span class="badge bg-danger">Belum</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if ($row['svcreq_status'] == 1)
                                         <span class="badge bg-success">Sudah</span>
                                     @else
                                         <span class="badge bg-danger">Belum</span>
