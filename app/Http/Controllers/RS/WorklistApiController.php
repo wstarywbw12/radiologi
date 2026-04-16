@@ -13,8 +13,18 @@ class WorklistApiController extends Controller
         // Default tanggal hari ini
         $start = $request->start_date ?? now()->toDateString();
         $end   = $request->end_date ?? now()->toDateString();
-
-        $url = "http://192.168.10.29/wslokal/satusehat/radiologi/worklist/allstudies/tanggal/$start/$end/";
+        $statusKirim = $request->status_kirim ?? 'all';
+        
+        // Build URL berdasarkan filter status kirim
+        $baseUrl = "http://192.168.10.29/wslokal/satusehat/radiologi/worklist/allstudies/tanggal/$start/$end";
+        
+        if ($statusKirim == '1') {
+            $url = "$baseUrl/1";
+        } elseif ($statusKirim == '0') {
+            $url = "$baseUrl/0";
+        } else {
+            $url = $baseUrl;
+        }
 
         try {
             $response = Http::timeout(10)->get($url);
@@ -33,6 +43,6 @@ class WorklistApiController extends Controller
             $total = 0;
         }
 
-        return view('worklist.index', compact('data', 'total', 'start', 'end'));
+        return view('worklist.index', compact('data', 'total', 'start', 'end', 'statusKirim'));
     }
 }

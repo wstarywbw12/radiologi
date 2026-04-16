@@ -22,7 +22,7 @@
             </div>
         </div>
 
-        <!-- 🔍 Filter Tanggal -->
+        <!-- 🔍 Filter Tanggal dan Status -->
         <form method="GET" class="row g-2 mb-3">
             <div class="col-md-3">
                 <input type="date" name="start_date" class="form-control" value="{{ $start }}">
@@ -31,13 +31,28 @@
                 <input type="date" name="end_date" class="form-control" value="{{ $end }}">
             </div>
             <div class="col-md-2">
+                <select name="status_kirim" class="form-select">
+                    <option value="all" {{ $statusKirim == 'all' ? 'selected' : '' }}>Semua Data</option>
+                    <option value="1" {{ $statusKirim == '1' ? 'selected' : '' }}>Sudah Kirim</option>
+                    <option value="0" {{ $statusKirim == '0' ? 'selected' : '' }}>Belum Kirim</option>
+                </select>
+            </div>
+            <div class="col-md-2">
                 <button class="btn btn-primary w-100">Filter</button>
+            </div>
+            <div class="col-md-2">
+                <a href="{{ url()->current() }}" class="btn btn-secondary w-100">Reset</a>
             </div>
         </form>
 
         <!-- Info -->
         <div class="alert alert-info">
-            Total Data: <strong>{{ $total }}</strong>
+            Total Data: <strong>{{ $total }}</strong> | 
+            Filter: 
+            @if($statusKirim == 'all') Semua Data
+            @elseif($statusKirim == '1') Sudah Kirim
+            @elseif($statusKirim == '0') Belum Kirim
+            @endif
         </div>
 
         <div class="card shadow-sm">
@@ -68,10 +83,10 @@
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
                                         @if ($row['processed_status'] == 1)
-                                        <span class="badge bg-primary"> {{ $row['no_rontgen'] }}</span>
-                                    @else
-                                        <span class="badge bg-danger"> {{ $row['no_rontgen'] }}</span>
-                                    @endif
+                                            <span class="badge bg-primary">{{ $row['no_rontgen'] }}</span>
+                                        @else
+                                            <span class="badge bg-danger">{{ $row['no_rontgen'] }}</span>
+                                        @endif
                                         <button type="button" class="btn btn-sm btn-outline-secondary copy-btn" 
                                                 data-copy="{{ $row['no_rontgen'] }}"
                                                 data-index="{{ $index }}"
@@ -102,7 +117,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="12" class="text-center">Tidak ada data</td>
+                                <td colspan="11" class="text-center">Tidak ada数据</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -222,19 +237,6 @@
             }
         }
 
-        // Fungsi copy saja (untuk tombol copy biasa)
-        function copyOnly(text, button) {
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(text).then(() => {
-                    showSuccess(button);
-                }).catch(() => {
-                    fallbackCopy(text, button, false);
-                });
-            } else {
-                fallbackCopy(text, button, false);
-            }
-        }
-
         function fallbackCopy(text, button, callApiAfter = false) {
             const textarea = document.createElement('textarea');
             textarea.value = text;
@@ -298,21 +300,6 @@
                     copyAndSendToApi(textToCopy, this);
                 } else {
                     alert('Tidak ada teks untuk disalin');
-                }
-            });
-        });
-
-        // Event listener untuk tombol Kirim API terpisah
-        document.querySelectorAll('.send-api-btn').forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                const noRontgen = this.getAttribute('data-no-rontgen');
-                if (noRontgen && noRontgen.trim() !== '') {
-                    if (confirm(`Kirim No Rontgen ${noRontgen} ke API SatuSehat?`)) {
-                        callApi(noRontgen, this);
-                    }
-                } else {
-                    alert('Nomor Rontgen tidak valid');
                 }
             });
         });
