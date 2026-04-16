@@ -4,6 +4,7 @@ use App\Http\Controllers\DicomMonitoringController;
 use App\Http\Controllers\RisOutController;
 use App\Http\Controllers\RS\RisOutController as RSRisOutController;
 use App\Http\Controllers\RS\ServiceRequestController as RSServiceRequestController;
+use App\Http\Controllers\RS\WorklistApiController;
 use App\Http\Controllers\SatusehatImagingController;
 use App\Http\Controllers\ServiceRequestController;
 use Illuminate\Support\Facades\Route;
@@ -24,5 +25,9 @@ Route::get('/rs-service-request', [RSServiceRequestController::class, 'index']);
 
 Route::get('/cek-image-study', [SatusehatImagingController::class, 'index'])->name('satusehat.index');
 Route::post('/satusehat/search', [SatusehatImagingController::class, 'search'])->name('satusehat.search');
+
+
+
+Route::get('/worklist-api', [WorklistApiController::class, 'index']);
 
 
