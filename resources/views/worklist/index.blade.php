@@ -15,7 +15,7 @@
                <div class="card">
                   <div class="card-header">
                         <h3>
-                            Data Worklist Radiologi
+                            ServiceRequest Radiologi
                         </h3>
                   </div>
                </div>
@@ -55,6 +55,7 @@
                             <th>Dokter</th>
                             <th>Start</th>
                             <th>End</th>
+                            <th>Status Kirim</th>
                             <th>Status SatuSehat</th>
                         </tr>
                     </thead>
@@ -74,6 +75,13 @@
                                 <td>{{ $row['dokter_pengirim'] }}</td>
                                 <td>{{ $row['radiolog_datetime_start'] }}</td>
                                 <td>{{ $row['radiolog_datetime_end'] }}</td>
+                                <td>
+                                    @if ($row['processed_status'] == 1)
+                                        <span class="badge bg-success">Sudah</span>
+                                    @else
+                                        <span class="badge bg-danger">Belum</span>
+                                    @endif
+                                </td>
                                 <td>
                                     @if ($row['svcreq_status'] == 1)
                                         <span class="badge bg-success">Sudah</span>
