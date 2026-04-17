@@ -14,13 +14,13 @@
 
         <div class="row mb-4">
             <div class="col-12">
-               <div class="card">
-                  <div class="card-header">
+                <div class="card">
+                    <div class="card-header">
                         <h3>
                             Image Study Satusehat - Worklist Radiologi
                         </h3>
-                  </div>
-               </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -48,15 +48,22 @@
         </form>
 
         <!-- Info -->
-        <div class="alert alert-info">
-            Total Data: <strong>{{ $total }}</strong> | 
-            Sudah Dikirim: <strong>{{ $sudahDikirim }}</strong> | 
-            Belum Dikirim: <strong>{{ $belumDikirim }}</strong>
-            Filter: 
-            @if($statusKirim == 'all') Semua Data
-            @elseif($statusKirim == '1') Sudah Kirim
-            @elseif($statusKirim == '0') Belum Kirim
-            @endif
+        <div class="row">
+            <div class="col-4">
+                <div class="alert alert-secondary">
+                    Total Data: <strong>{{ $total }}</strong> 
+                </div>
+            </div>
+            <div class="col-4">
+                <div style="background-color: rgb(4, 149, 4); color: white;" class="alert alert-success">
+                    Sudah Dikirim: <strong>{{ $sudahDikirim }}</strong> 
+                </div>
+            </div>
+            <div class="col-4">
+                <div style="background-color: rgb(189, 4, 23); color: white;" class="alert alert-danger">
+                    Belum Dikirim: <strong>{{ $belumDikirim }}</strong>
+                </div>
+            </div>
         </div>
 
         <div class="card shadow-sm">
@@ -92,10 +99,9 @@
                                         @else
                                             <span class="badge bg-danger">{{ $row['no_rontgen'] }}</span>
                                         @endif
-                                        <button type="button" class="btn btn-sm btn-outline-secondary copy-btn" 
-                                                data-copy="{{ $row['no_rontgen'] }}"
-                                                data-index="{{ $index }}"
-                                                title="Salin No Rontgen & Kirim ke API">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary copy-btn"
+                                            data-copy="{{ $row['no_rontgen'] }}" data-index="{{ $index }}"
+                                            title="Salin No Rontgen & Kirim ke API">
                                             📋
                                         </button>
                                     </div>
@@ -120,9 +126,8 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <button type="button" class="btn btn-sm btn-outline-primary sync-btn" 
-                                            data-no-rontgen="{{ $row['no_rontgen'] }}"
-                                            title="Cek Image Study">
+                                    <button type="button" class="btn btn-sm btn-outline-primary sync-btn"
+                                        data-no-rontgen="{{ $row['no_rontgen'] }}" title="Cek Image Study">
                                         🔄 Cek
                                     </button>
                                 </td>
@@ -141,7 +146,8 @@
     </div>
 
     <!-- Loading Overlay -->
-    <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; text-align: center; padding-top: 20%;">
+    <div id="loadingOverlay"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; text-align: center; padding-top: 20%;">
         <div style="background: white; display: inline-block; padding: 20px; border-radius: 10px;">
             <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
                 <span class="visually-hidden">Loading...</span>
@@ -152,7 +158,7 @@
 
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+
     <script>
         // Fungsi untuk menampilkan loading
         function showLoading() {
@@ -174,7 +180,7 @@
                 ${message}
             `;
             document.body.appendChild(notification);
-            
+
             setTimeout(() => {
                 notification.remove();
             }, 3000);
@@ -182,14 +188,15 @@
 
         // Fungsi untuk mengakses API manualsend
         async function callApi(noRontgen, button) {
-            const apiUrl = `http://192.168.10.29/wslokal/satusehat/radiologi/worklist/ris/accno/${noRontgen}/manualsend`;
-            
+            const apiUrl =
+            `http://192.168.10.29/wslokal/satusehat/radiologi/worklist/ris/accno/${noRontgen}/manualsend`;
+
             showLoading();
-            
+
             const originalText = button.innerHTML;
             button.innerHTML = '⏳';
             button.disabled = true;
-            
+
             try {
                 const response = await fetch(apiUrl, {
                     method: 'GET',
@@ -197,14 +204,16 @@
                         'Accept': 'application/json',
                     }
                 });
-                
+
                 let result;
                 try {
                     result = await response.json();
-                } catch(e) {
-                    result = { message: await response.text() };
+                } catch (e) {
+                    result = {
+                        message: await response.text()
+                    };
                 }
-                
+
                 if (response.ok) {
                     const successMessage = result.metaData?.message || `Berhasil mengirim No Rontgen: ${noRontgen}`;
                     showNotification(successMessage, 'success');
@@ -213,7 +222,7 @@
                         button.innerHTML = originalText;
                         button.disabled = false;
                     }, 2000);
-                    
+
                     setTimeout(() => {
                         location.reload();
                     }, 2000);
@@ -235,14 +244,15 @@
 
         // Fungsi untuk cek Image Study dengan SweetAlert2
         async function syncImageStudy(noRontgen, button) {
-            const apiUrl = `http://192.168.10.29/wslokal/satusehat/radiologi/worklist/ris/accno/${noRontgen}/sinkimgstudy`;
-            
+            const apiUrl =
+                `http://192.168.10.29/wslokal/satusehat/radiologi/worklist/ris/accno/${noRontgen}/sinkimgstudy`;
+
             showLoading();
-            
+
             const originalText = button.innerHTML;
             button.innerHTML = '⏳';
             button.disabled = true;
-            
+
             try {
                 const response = await fetch(apiUrl, {
                     method: 'GET',
@@ -250,18 +260,21 @@
                         'Accept': 'application/json',
                     }
                 });
-                
+
                 let result;
                 try {
                     result = await response.json();
-                } catch(e) {
-                    result = { message: await response.text() };
+                } catch (e) {
+                    result = {
+                        message: await response.text()
+                    };
                 }
-                
+
                 if (response.ok) {
                     // Ambil message dari response metaData
-                    const message = result.metaData?.message || `Cek Image Study berhasil untuk No Rontgen: ${noRontgen}`;
-                    
+                    const message = result.metaData?.message ||
+                        `Cek Image Study berhasil untuk No Rontgen: ${noRontgen}`;
+
                     // Tampilkan SweetAlert2 sukses
                     Swal.fire({
                         icon: 'success',
@@ -272,23 +285,23 @@
                         timer: 3000,
                         showConfirmButton: true
                     });
-                    
+
                     // Tampilkan juga notifikasi toast
                     showNotification(message, 'success');
-                    
+
                     button.innerHTML = '✓';
                     setTimeout(() => {
                         button.innerHTML = originalText;
                         button.disabled = false;
                     }, 2000);
-                    
+
                     // Refresh halaman setelah 2 detik
                     setTimeout(() => {
                         location.reload();
                     }, 2000);
                 } else {
                     const errorMessage = result.metaData?.message || result.message || 'Gagal cek Image Study';
-                    
+
                     // Tampilkan SweetAlert2 error
                     Swal.fire({
                         icon: 'error',
@@ -299,14 +312,14 @@
                         timer: 3000,
                         showConfirmButton: true
                     });
-                    
+
                     showNotification(errorMessage, 'danger');
                     throw new Error(errorMessage);
                 }
             } catch (error) {
                 console.error('Error:', error);
                 const errorMsg = error.message || 'Terjadi kesalahan saat cek Image Study';
-                
+
                 // Tampilkan SweetAlert2 error
                 Swal.fire({
                     icon: 'error',
@@ -315,7 +328,7 @@
                     confirmButtonText: 'OK',
                     confirmButtonColor: '#d33'
                 });
-                
+
                 showNotification(errorMsg, 'danger');
                 button.innerHTML = '❌';
                 setTimeout(() => {
@@ -350,7 +363,7 @@
             document.body.appendChild(textarea);
             textarea.select();
             textarea.setSelectionRange(0, text.length);
-            
+
             try {
                 const success = document.execCommand('copy');
                 if (success) {
@@ -364,7 +377,7 @@
             } catch (err) {
                 showError(button);
             }
-            
+
             document.body.removeChild(textarea);
         }
 
