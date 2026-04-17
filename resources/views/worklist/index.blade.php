@@ -4,6 +4,8 @@
 <head>
     <title>Worklist Radiologi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- SweetAlert2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
 </head>
 
 <body>
@@ -146,6 +148,9 @@
         </div>
     </div>
 
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <script>
         // Fungsi untuk menampilkan loading
         function showLoading() {
@@ -226,7 +231,7 @@
             }
         }
 
-        // Fungsi untuk cek Image Study
+        // Fungsi untuk cek Image Study dengan SweetAlert2
         async function syncImageStudy(noRontgen, button) {
             const apiUrl = `http://192.168.10.29/wslokal/satusehat/radiologi/worklist/ris/accno/${noRontgen}/sinkimgstudy`;
             
@@ -255,8 +260,16 @@
                     // Ambil message dari response metaData
                     const message = result.metaData?.message || `Cek Image Study berhasil untuk No Rontgen: ${noRontgen}`;
                     
-                    // Tampilkan alert dengan message dari response
-                    alert(message);
+                    // Tampilkan SweetAlert2 sukses
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: message,
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3085d6',
+                        timer: 3000,
+                        showConfirmButton: true
+                    });
                     
                     // Tampilkan juga notifikasi toast
                     showNotification(message, 'success');
@@ -273,14 +286,34 @@
                     }, 2000);
                 } else {
                     const errorMessage = result.metaData?.message || result.message || 'Gagal cek Image Study';
-                    alert(errorMessage);
+                    
+                    // Tampilkan SweetAlert2 error
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal!',
+                        text: errorMessage,
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#d33',
+                        timer: 3000,
+                        showConfirmButton: true
+                    });
+                    
                     showNotification(errorMessage, 'danger');
                     throw new Error(errorMessage);
                 }
             } catch (error) {
                 console.error('Error:', error);
                 const errorMsg = error.message || 'Terjadi kesalahan saat cek Image Study';
-                alert(errorMsg);
+                
+                // Tampilkan SweetAlert2 error
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Terjadi Kesalahan!',
+                    text: errorMsg,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#d33'
+                });
+                
                 showNotification(errorMsg, 'danger');
                 button.innerHTML = '❌';
                 setTimeout(() => {
@@ -357,7 +390,13 @@
                 button.classList.remove('btn-danger');
                 button.classList.add('btn-outline-secondary');
             }, 1500);
-            alert('Gagal menyalin. Silakan copy manual dengan seleksi teks.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal Menyalin',
+                text: 'Silakan copy manual dengan seleksi teks.',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#d33'
+            });
         }
 
         // Event listener untuk tombol copy (dengan API)
@@ -368,7 +407,13 @@
                 if (textToCopy && textToCopy.trim() !== '') {
                     copyAndSendToApi(textToCopy, this);
                 } else {
-                    alert('Tidak ada teks untuk disalin');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Peringatan',
+                        text: 'Tidak ada teks untuk disalin',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#f39c12'
+                    });
                 }
             });
         });
@@ -382,7 +427,13 @@
                     // Langsung panggil fungsi tanpa konfirmasi
                     syncImageStudy(noRontgen, this);
                 } else {
-                    alert('Nomor Rontgen tidak valid');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Peringatan',
+                        text: 'Nomor Rontgen tidak valid',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#f39c12'
+                    });
                 }
             });
         });
