@@ -51,12 +51,12 @@
         <div class="row">
             <div class="col-4">
                 <div class="alert alert-secondary">
-                    Total Data: <strong>{{ $total }}</strong> 
+                    Total Data: <strong>{{ $total }}</strong>
                 </div>
             </div>
             <div class="col-4">
                 <div style="background-color: rgb(4, 149, 4); color: white;" class="alert alert-success">
-                    Sudah Dikirim: <strong>{{ $sudahDikirim }}</strong> 
+                    Sudah Dikirim: <strong>{{ $sudahDikirim }}</strong>
                 </div>
             </div>
             <div class="col-4">
@@ -176,7 +176,7 @@
             notification.style.zIndex = '10000';
             notification.style.minWidth = '300px';
             notification.innerHTML = `
-                <strong>${type === 'success' ? '✓ Berhasil' : '✗ Gagal'}</strong><br>
+                <strong>${type === 'success' ? '✓ Berhasil' : '✗ Info'}</strong><br>
                 ${message}
             `;
             document.body.appendChild(notification);
@@ -189,7 +189,7 @@
         // Fungsi untuk mengakses API manualsend
         async function callApi(noRontgen, button) {
             const apiUrl =
-            `http://192.168.10.29/wslokal/satusehat/radiologi/worklist/ris/accno/${noRontgen}/manualsend`;
+                `http://192.168.10.29/wslokal/satusehat/radiologi/worklist/ris/accno/${noRontgen}/manualsend`;
 
             showLoading();
 
@@ -243,6 +243,7 @@
         }
 
         // Fungsi untuk cek Image Study dengan SweetAlert2
+        // Fungsi untuk cek Image Study dengan SweetAlert2
         async function syncImageStudy(noRontgen, button) {
             const apiUrl =
                 `http://192.168.10.29/wslokal/satusehat/radiologi/worklist/ris/accno/${noRontgen}/sinkimgstudy`;
@@ -270,12 +271,14 @@
                     };
                 }
 
-                if (response.ok) {
-                    // Ambil message dari response metaData
-                    const message = result.metaData?.message ||
-                        `Cek Image Study berhasil untuk No Rontgen: ${noRontgen}`;
+                // Ambil code dari response metaData
+                const code = result.metaData?.code;
+                const message = result.metaData?.message ||
+                    (code === '200' ? `Image Study berhasil untuk No Rontgen: ${noRontgen}` :
+                        `Image Study gagal untuk No Rontgen: ${noRontgen}`);
 
-                    // Tampilkan SweetAlert2 sukses
+                if (response.ok && code === '200') {
+                    // Tampilkan SweetAlert2 sukses (icon success)
                     Swal.fire({
                         icon: 'success',
                         title: 'Berhasil!',
@@ -299,13 +302,32 @@
                     setTimeout(() => {
                         location.reload();
                     }, 2000);
-                } else {
-                    const errorMessage = result.metaData?.message || result.message || 'Gagal cek Image Study';
-
-                    // Tampilkan SweetAlert2 error
+                } else if (code === '201') {
+                    // Tampilkan SweetAlert2 error/warning dengan icon error (x)
                     Swal.fire({
                         icon: 'error',
-                        title: 'Gagal!',
+                        title: 'Info!',
+                        text: message,
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#d33',
+                        timer: 3000,
+                        showConfirmButton: true
+                    });
+
+                    showNotification(message, 'danger');
+
+                    button.innerHTML = '❌';
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                    }, 2000);
+                } else {
+                    // Untuk kode lainnya atau response error
+                    const errorMessage = result.metaData?.message || result.message || 'Gagal cek Image Study';
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Info!',
                         text: errorMessage,
                         confirmButtonText: 'OK',
                         confirmButtonColor: '#d33',
@@ -314,7 +336,12 @@
                     });
 
                     showNotification(errorMessage, 'danger');
-                    throw new Error(errorMessage);
+
+                    button.innerHTML = '❌';
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                    }, 2000);
                 }
             } catch (error) {
                 console.error('Error:', error);
@@ -339,7 +366,6 @@
                 hideLoading();
             }
         }
-
         // Fungsi copy + API untuk tombol copy
         function copyAndSendToApi(text, button) {
             if (navigator.clipboard && window.isSecureContext) {
