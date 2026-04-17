@@ -11,7 +11,7 @@ class WorklistApiController extends Controller
     public function index(Request $request)
     {
         // Default tanggal hari ini
-        $start = $request->start_date ?? now()->toDateString();
+        $start = $request->start_date ?? now()->subDays(15)->toDateString();
         $end   = $request->end_date ?? now()->toDateString();
         $statusKirim = $request->status_kirim ?? 'all';
         
