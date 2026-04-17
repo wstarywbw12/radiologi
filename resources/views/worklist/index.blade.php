@@ -50,6 +50,8 @@
         <!-- Info -->
         <div class="alert alert-info">
             Total Data: <strong>{{ $total }}</strong> | 
+            Sudah Dikirim: <strong>{{ $sudahDikirim }}</strong> | 
+            Belum Dikirim: <strong>{{ $belumDikirim }}</strong>
             Filter: 
             @if($statusKirim == 'all') Semua Data
             @elseif($statusKirim == '1') Sudah Kirim
