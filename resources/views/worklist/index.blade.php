@@ -341,6 +341,57 @@
             background-color: #0f172a !important;
             color: #475569 !important;
         }
+
+        /* Search box */
+        .search-wrap {
+            position: relative;
+        }
+
+        .search-wrap .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            pointer-events: none;
+            font-size: .9rem;
+        }
+
+        .search-wrap .form-control {
+            padding-left: 34px;
+            padding-right: 34px;
+            height: 36px;
+            /* lebih ringkas di header tabel */
+            font-size: .82rem;
+        }
+
+        .search-wrap .search-clear {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: #64748b;
+            font-size: 1rem;
+            line-height: 1;
+            padding: 2px 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all .15s;
+        }
+
+        .search-wrap .search-clear:hover {
+            color: #fff;
+            background: #334155;
+        }
+
+        /* Responsif: di layar kecil search turun ke bawah judul */
+        @media (max-width: 576px) {
+            .search-wrap {
+                min-width: 100%;
+            }
+        }
     </style>
 </head>
 
@@ -376,7 +427,7 @@
     <div class="container pb-5">
 
         <!-- Filter -->
-        <form method="GET" class="glass-card p-3 mb-4">
+        <form method="GET" class="glass-card p-3 mb-4" id="filterForm">
             <div class="row g-2 align-items-end">
                 <div class="col-md-3">
                     <label class="stat-label d-block mb-1">Tanggal Mulai</label>
@@ -401,6 +452,8 @@
                     <a href="{{ url()->current() }}" class="btn btn-navy-secondary w-100 py-2">Reset</a>
                 </div>
             </div>
+            {{-- hidden input untuk search agar tetap terkirim saat form filter disubmit --}}
+            <input type="hidden" name="search" id="searchHidden" value="{{ $search }}">
         </form>
 
         <!-- Stat Cards -->
@@ -439,7 +492,8 @@
                         <div class="stat-value" style="color:#f87171;">{{ $belumDikirim }}</div>
                     </div>
                     <div class="stat-icon" style="background:rgba(239,68,68,.12);color:#f87171;">
-                        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg width="22" height="22" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
@@ -450,10 +504,33 @@
 
         <!-- Table -->
         <div class="glass-card">
-            <div class="d-flex justify-content-between align-items-center px-4 py-3"
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 px-4 py-3"
                 style="border-bottom:1px solid #1e293b;">
-                <h6 class="mb-0 fw-semibold" style="color:#f1f5f9; font-size:.9rem;">Daftar Worklist Radiologi</h6>
-                <span class="cell-muted">{{ count($data) }} baris</span>
+                <h6 class="mb-0 fw-semibold" style="color:#f1f5f9; font-size:.9rem;">
+                    Daftar Worklist Radiologi
+                    @if ($search !== '')
+                        <span class="badge-soft badge-blue ms-2" style="font-size:.7rem;">
+                            <span class="dot"></span>Filter: "{{ $search }}"
+                        </span>
+                    @endif
+                </h6>
+
+                <div class="d-flex align-items-center gap-2" style="min-width:280px;">
+                    {{-- Search box --}}
+                    <div class="search-wrap" style="flex:1 1 auto;">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="searchInput" class="form-control"
+                            placeholder="Cari No Rontgen, Nama, No RM, Pemeriksaan..." value="{{ $search }}"
+                            autocomplete="off">
+                        @if ($search !== '')
+                            <button type="button" class="search-clear" id="searchClear"
+                                title="Hapus pencarian">✕</button>
+                        @endif
+                    </div>
+                    <span class="cell-muted" style="font-size:.78rem; white-space:nowrap;">
+                        {{ $paginator->total() }} baris
+                    </span>
+                </div>
             </div>
 
             <div class="table-wrap">
@@ -926,6 +1003,61 @@
                 }
             });
         });
+        // ====== Search: debounce + auto submit + clear ======
+        (function() {
+            const form = document.getElementById('filterForm');
+            const input = document.getElementById('searchInput');
+            const hidden = document.getElementById('searchHidden');
+            const clear = document.getElementById('searchClear');
+            if (!form || !input) return;
+
+            let timer = null;
+
+            function submitSearch() {
+                // sinkronkan nilai search ke hidden input di dalam form
+                if (hidden) hidden.value = input.value;
+                // reset ke halaman 1 saat search berubah
+                let pageInput = form.querySelector('input[name="page"]');
+                if (!pageInput) {
+                    pageInput = document.createElement('input');
+                    pageInput.type = 'hidden';
+                    pageInput.name = 'page';
+                    form.appendChild(pageInput);
+                }
+                pageInput.value = 1;
+                form.submit();
+            }
+
+            // Auto-submit setelah 500ms idle (debounce)
+            input.addEventListener('input', function() {
+                clearTimeout(timer);
+                timer = setTimeout(submitSearch, 500);
+            });
+
+            // Enter langsung submit
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    clearTimeout(timer);
+                    submitSearch();
+                }
+            });
+
+            // Tombol clear
+            if (clear) {
+                clear.addEventListener('click', function() {
+                    input.value = '';
+                    if (hidden) hidden.value = '';
+                    submitSearch();
+                });
+            }
+
+            // Fokus otomatis jika ada search aktif
+            @if ($search !== '')
+                input.focus();
+                input.setSelectionRange(input.value.length, input.value.length);
+            @endif
+        })();
     </script>
 
 </body>

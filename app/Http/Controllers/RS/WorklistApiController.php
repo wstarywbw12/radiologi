@@ -15,6 +15,7 @@ class WorklistApiController extends Controller
         $start       = $request->start_date ?? now()->subDays(15)->toDateString();
         $end         = $request->end_date ?? now()->toDateString();
         $statusKirim = $request->status_kirim ?? 'all';
+        $search      = trim((string) ($request->search ?? ''));
         $perPage     = 20;
         $page        = (int) ($request->page ?? 1);
 
@@ -28,18 +29,16 @@ class WorklistApiController extends Controller
             $url = $baseUrl;
         }
 
-        // Cache key unik per kombinasi filter
         $cacheKey = 'worklist:' . md5($url);
 
         $result = Cache::remember($cacheKey, 60, function () use ($url) {
             try {
                 $response = Http::timeout(5)->get($url);
-
                 if ($response->successful()) {
                     return $response->json();
                 }
             } catch (\Exception $e) {
-                // log jika perlu
+                // silent
             }
             return null;
         });
@@ -54,9 +53,26 @@ class WorklistApiController extends Controller
             $total = $sudahDikirim = $belumDikirim = 0;
         }
 
-        // Manual pagination (karena API tidak support pagination)
         $collection = collect($data);
-        $slice      = $collection->forPage($page, $perPage)->values()->all();
+
+        // === SEARCH (server-side, sebelum pagination) ===
+        if ($search !== '') {
+            $needle = mb_strtolower($search);
+            $collection = $collection->filter(function ($row) use ($needle) {
+                $haystack = mb_strtolower(implode(' ', [
+                    $row['no_rontgen']       ?? '',
+                    $row['nama_pasien']      ?? '',
+                    $row['no_rm']            ?? '',
+                    $row['nama_pemeriksaan'] ?? '',
+                    $row['dokter_pengirim']  ?? '',
+                    $row['tanggal_order']    ?? '',
+                ]));
+                return str_contains($haystack, $needle);
+            })->values();
+        }
+
+        // === Pagination setelah filter ===
+        $slice = $collection->forPage($page, $perPage)->values()->all();
 
         $paginator = new LengthAwarePaginator(
             $slice,
@@ -76,14 +92,12 @@ class WorklistApiController extends Controller
             'start'        => $start,
             'end'          => $end,
             'statusKirim'  => $statusKirim,
+            'search'       => $search,
             'sudahDikirim' => $sudahDikirim,
             'belumDikirim' => $belumDikirim,
         ]);
     }
 
-    /**
-     * Kirim data radiologi ke endpoint SatuSehat.
-     */
     public function kirim(Request $request)
     {
         $request->validate([
@@ -97,8 +111,7 @@ class WorklistApiController extends Controller
             $response = Http::timeout(300)->get($url);
 
             if ($response->successful()) {
-                // hapus cache supaya data terbaru muncul setelah reload
-                Cache::flush(); // atau Cache::forget() spesifik key
+                Cache::flush();
 
                 return response()->json([
                     'status'  => 'success',
