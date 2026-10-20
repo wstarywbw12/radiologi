@@ -28,7 +28,8 @@ Route::post('/satusehat/search', [SatusehatImagingController::class, 'search'])-
 
 
 
-Route::get('/worklist-api', [WorklistApiController::class, 'index']);
+Route::get('/worklist-api', [WorklistApiController::class, 'index'])->name('worklist.index');
+Route::post('/worklist/kirim', [WorklistApiController::class, 'kirim'])->name('worklist.kirim');
 
 
 Route::get('/satusehat/imaging', [SatusehatImagingController::class, 'api']);
